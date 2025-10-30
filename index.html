@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>מרכז ההדרכות — כרטיסים דינמיים</title>
+<style>
+  :root{
+    --blue:#0b4f8c;
+    --light-blue:#e9f2fb;
+    --accent:#1370c8;
+    --muted:#6b7785;
+    --card-bg:#ffffff;
+  }
+  html,body{height:100%; margin:0; padding:0; font-family:Arial, Helvetica, sans-serif; background:var(--light-blue); direction:rtl; color:#222}
+  header{background:linear-gradient(90deg,var(--blue),#0a3e66); color:#fff; padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  header .left{display:flex; align-items:center; gap:12px}
+  header img.logo{height:56px; border-radius:8px; background:#fff; padding:4px}
+  header h1{margin:0; font-size:20px; font-weight:700}
+  .main {padding:22px; max-width:1100px; margin:18px auto;}
+  .hero{background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85)); border-radius:14px; padding:18px; display:flex; gap:14px; align-items:center; box-shadow: 0 6px 20px rgba(0,0,0,0.06); flex-wrap:wrap}
+  .hero .logo-wrap{flex:0 0 120px; display:flex; align-items:center; justify-content:center}
+  .hero .logo-wrap img{height:90px;}
+  .hero .content{flex:1; text-align:right}
+  .hero h2{margin:0 0 6px 0; color:var(--blue)}
+  .muted{color:var(--muted)}
+  .grid-cats{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end}
+  .cat{background:var(--card-bg); padding:12px 16px; border-radius:10px; min-width:160px; box-shadow:0 4px 12px rgba(11,79,140,0.07); cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; display:flex; align-items:center; gap:12px; text-align:right}
+  .cat:hover{transform:translateY(-6px); box-shadow:0 8px 26px rgba(11,79,140,0.12)}
+  .cat .icon{width:40px; height:40px; border-radius:8px; background:var(--light-blue); display:flex; align-items:center; justify-content:center; color:var(--accent); font-weight:700}
+  .cat .txt{font-weight:600}
+  .search-row{display:flex; gap:10px; margin:18px 0; align-items:center}
+  .search-row input{flex:1; padding:10px 12px; border-radius:10px; border:1px solid #d6e6fb; font-size:16px}
+  .search-row button{background:var(--accent); color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer}
+  .card{background:var(--card-bg); padding:12px; border-radius:12px; box-shadow:0 6px 18px rgba(13,46,78,0.04); margin-bottom:12px; text-align:right}
+  .cards-grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:14px; margin-top:14px}
+  .item-card{background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 8px 20px rgba(11,79,140,0.06); display:flex; flex-direction:column; min-height:140px}
+  .item-card img{width:100%; height:140px; object-fit:cover; display:block}
+  .item-body{padding:12px; flex:1; display:flex; flex-direction:column; gap:8px}
+  .item-title{font-weight:700; color:var(--blue); font-size:16px}
+  .item-desc{color:var(--muted); font-size:14px; white-space:pre-wrap}
+  .item-meta{font-size:13px; color:#2b3b4a; margin-top:auto; display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+  .meta-chip{background:#f4f9ff; color:var(--blue); padding:6px 8px; border-radius:8px; font-size:13px}
+  .actions{display:flex; gap:8px; margin-top:8px; justify-content:flex-end}
+  .btn{background:var(--accent); color:#fff; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:13px}
+  .btn.secondary{background:#fff; color:var(--blue); border:1px solid #d6e6fb}
+  .sheet-area{margin-top:12px}
+  .sheet-header{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px}
+  .sheet-title{font-size:18px; font-weight:700; color:var(--blue)}
+  .back-btn{background:#fff; border:1px solid #ddd; padding:8px 12px; border-radius:8px; cursor:pointer}
+  .hidden{display:none}
+  #loadingMessage{text-align:center; margin-top:60px; color:var(--blue); font-size:18px;}
+  .spinner{border:4px solid #e3eaf5;border-top:4px solid var(--blue);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto 10px;}
+  @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+  table{width:100%; border-collapse:collapse; direction:rtl}
+  th,td{border:1px solid #e6eef8; padding:10px; text-align:right}
+  th{background:#f4fbff; color:var(--blue); font-weight:700}
+  .footer{margin-top:24px; text-align:center; color:var(--muted); padding:18px 0; font-size:14px}
+  @media (max-width:760px){
+    header{padding:14px}
+    .hero{padding:14px}
+    .hero .logo-wrap{flex-basis:90px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <img class="logo" src="https://i.postimg.cc/kDK1cdcC/logo.png" alt="לוגו">
+    <div>
+      <h1>מרכז ההדרכות</h1>
+      <div class="muted">מתעדכן אוטומטית מתוך Google Sheets</div>
+    </div>
+  </div>
+  <div>
+    <!-- מקום לכפתורי משתמש בעתיד -->
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- הודעת טעינה -->
+  <div id="loadingMessage">
+    <div class="spinner"></div>
+    ⏳ המתן כמה שניות... שואב נתונים מהקובץ המקורי
+  </div>
+
+  <!-- דף הבית -->
+  <div id="homePage" class="hidden">
+    <div class="hero">
+      <div class="logo-wrap">
+        <img src="https://i.postimg.cc/kDK1cdcC/logo.png" alt="לוגו">
+      </div>
+      <div class="content">
+        <h2>מרכז ההדרכות הפנימי</h2>
+        <p class="muted">כל ההנחיות, הקישורים והטלפונים במקום אחד — מתעדכן אוטומטית מהגיליון.</p>
+        <div class="grid-cats" id="homeCats"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px" class="card">
+      <div class="muted">חיפוש מהיר בכל האתר</div>
+      <div class="search-row">
+        <input id="globalSearch" placeholder="חפש כאן — כל ההדרכות, קישורים וטלפונים..." />
+        <button id="clearSearch">נקה</button>
+      </div>
+      <div id="searchResults" class="hidden card"></div>
+    </div>
+  </div>
+
+  <!-- אזור הצגת גיליון -->
+  <div id="sheetPage" class="hidden">
+    <div class="sheet-area">
+      <div class="sheet-header">
+        <div>
+          <button class="back-btn" id="backHome">← חזור</button>
+        </div>
+        <div class="sheet-title" id="sheetTitle"></div>
+      </div>
+
+      <div id="sheetContent"></div>
+    </div>
+  </div>
+
+  <div class="footer">© נבנה על ידי מ.ל | האתר בהרצה</div>
+</div>
+
+<script>
+/* ----------------- הגדרות ----------------- */
+const API_URL = "https://script.google.com/macros/s/AKfycbzjmufh1nxbVZbpO3hVZSWWPHV3CLnOWjWVYJftLrwPFPKlcuwNA8aBc0k0jAIq2IMx3w/exec";
+let sheetsData = {}; // יאוחסן כאן לאחר טעינה
+
+/* ----------------- עזרי פורמט ----------------- */
+function isArrayOfArrays(x){ return Array.isArray(x) && Array.isArray(x[0]); }
+
+function normalizeKey(k){
+  if(!k && k!==0) return "";
+  return String(k).trim();
+}
+function detectTitleKey(headers){
+  const candidates = ['כותרת','נושא','title','שם','name','title / נושא','topic'];
+  for(const c of candidates){
+    const idx = headers.findIndex(h => h && String(h).toLowerCase().trim() === c);
+    if(idx !== -1) return headers[idx];
+  }
+  // fallback: first header
+  return headers[0] || null;
+}
+function findKeyIgnoreCase(headers, list){
+  const low = headers.map(h => String(h||"").toLowerCase().trim());
+  for(const candidate of list){
+    const idx = low.indexOf(candidate.toLowerCase());
+    if(idx !== -1) return headers[idx];
+  }
+  return null;
+}
+function guessImageKey(headers){
+  return findKeyIgnoreCase(headers, ['תמונה','image','img','picture','photo','url_picture','image_url']);
+}
+function guessLinkKey(headers){
+  return findKeyIgnoreCase(headers, ['קישור','link','url','website','כתובת']);
+}
+function guessDescriptionKey(headers){
+  return findKeyIgnoreCase(headers, ['תיאור','description','details','פרטים','body','summary']);
+}
+
+/* פורמט תצוגה של ערך יחיד */
+function formatCellVal(val){
+  if(val === null || val === undefined) return "";
+  const s = String(val).trim();
+  // תמונה?
+  if(s.match(/\.(jpg|jpeg|png|gif|bmp|webp)(\?.*)?$/i) || s.startsWith("https://i.postimg.cc") || s.startsWith("https://imgur.com") || s.startsWith("data:image/")){
+    return `<img src="${escapeHTML(s)}" style="max-width:100%; display:block; border-radius:8px; margin-bottom:6px" alt="תמונה">`;
+  }
+  // YouTube?
+  if(s.includes("youtube.com/watch") || s.includes("youtu.be/")){
+    let id = null;
+    const m = s.match(/[?&]v=([^&]+)/);
+    if(m) id = m[1];
+    else {
+      const m2 = s.match(/youtu\.be\/([^?&]+)/);
+      if(m2) id = m2[1];
+    }
+    if(id) return `<div style="margin:8px 0"><iframe width="100%" height="200" src="https://www.youtube.com/embed/${id}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  }
+  // mailto?
+  if(s.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) return `<a href="mailto:${escapeHTML(s)}">${escapeHTML(s)}</a>`;
+  // phone?
+  if(s.match(/^[0-9+\-\s()]{6,}$/)) {
+    const tel = s.replace(/\s+/g,'');
+    return `<a href="tel:${escapeHTML(tel)}">${escapeHTML(s)}</a>`;
+  }
+  return escapeHTML(s).replace(/\n/g,"<br>");
+}
+
+function escapeHTML(str){
+  return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"\'":'&#39;'})[m]; });
+}
+
+/* ----------------- בניית כרטיסים דינמית ----------------- */
+function buildCardFromRow(headers, rowObj){
+  // headers: [h1,h2,...]  rowObj: {h1:val, h2:val,...}
+  // נאתר שדות חשובים:
+  const keys = headers.slice();
+  const lowKeys = keys.map(k => String(k||"").toLowerCase().trim());
+  const titleKey = findKeyIgnoreCase(keys, ['כותרת','נושא','title','שם','name']) || keys[0];
+  const imgKey = guessImageKey(keys);
+  const linkKey = guessLinkKey(keys);
+  const descKey = guessDescriptionKey(keys);
+
+  const title = rowObj[titleKey] || rowObj[Object.keys(rowObj)[0]] || "";
+  const img = imgKey ? rowObj[imgKey] : null;
+  const link = linkKey ? rowObj[linkKey] : null;
+  const desc = descKey ? rowObj[descKey] : null;
+
+  let html = `<div class="item-card">`;
+  // תמונה (אם יש)
+  if(img){
+    const src = String(img).trim();
+    if(src) html += `<img src="${escapeHTML(src)}" alt="image">`;
+  }
+  html += `<div class="item-body">`;
+  html += `<div class="item-title">${formatCellVal(title)}</div>`;
+  if(desc && String(desc).trim()){
+    html += `<div class="item-desc">${formatCellVal(desc)}</div>`;
+  }
+
+  // שדות נוספים כצ'יפים/מטא
+  const metaParts = [];
+  const actionButtons = [];
+
+  // עבור כל שדה, פרט לשדות שכבר הצגנו, ננסה לזהות טלפון/מייל/קישור/שאר
+  keys.forEach(k=>{
+    if(!k) return;
+    const val = rowObj[k];
+    if(val === null || val === undefined || String(val).trim()==="") return;
+    // דילוג על שדות שכבר השתמשנו בהם
+    if(k === titleKey || k === imgKey || k === linkKey || k === descKey) return;
+
+    const s = String(val).trim();
+    const lKeyLower = String(k).toLowerCase();
+
+    // קישור
+    if(s.startsWith("http://") || s.startsWith("https://")){
+      // נציג ככפתור פתיחה
+      actionButtons.push({type:'link', url: s, label: k});
+      return;
+    }
+    // אימייל
+    if(s.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)){
+      actionButtons.push({type:'email', url:`mailto:${s}`, label: s});
+      return;
+    }
+    // טלפון
+    if(s.match(/^[0-9+\-\s()]{6,}$/)){
+      actionButtons.push({type:'tel', url:`tel:${s.replace(/\s+/g,'')}`, label: s});
+      return;
+    }
+    // אחרת - המטא
+    metaParts.push(`<div class="meta-chip"><strong>${escapeHTML(k)}:</strong>&nbsp;${escapeHTML(s)}</div>`);
+  });
+
+  if(metaParts.length){
+    html += `<div class="item-meta">${metaParts.join("")}</div>`;
+  }
+
+  // פעולות
+  if(link && String(link).trim()){
+    actionButtons.unshift({type:'link', url: String(link).trim(), label: 'פתח קישור'});
+  }
+
+  if(actionButtons.length){
+    html += `<div class="actions">`;
+    actionButtons.forEach(a=>{
+      if(a.type === 'link') html += `<a class="btn" href="${escapeHTML(a.url)}" target="_blank" rel="noopener">${escapeHTML(a.label)}</a>`;
+      else if(a.type === 'tel') html += `<a class="btn secondary" href="${escapeHTML(a.url)}">${escapeHTML(a.label)}</a>`;
+      else if(a.type === 'email') html += `<a class="btn secondary" href="${escapeHTML(a.url)}">${escapeHTML(a.label)}</a>`;
+    });
+    html += `</div>`;
+  }
+
+  // תמיד כפתור להצגת השורה בגיליון (מעביר לעמוד הגיליון וגלילה עתידית)
+  html += `<div style="text-align:left; margin-top:8px"><button class="back-btn" onclick="openRowInSheetView(event)">הצג פריט</button></div>`;
+
+  html += `</div></div>`; // item-body + item-card
+  return html;
+}
+
+/* מאזינות לכפתור 'הצג פריט' (כעת פשוט חזרה לדף הגיליון) */
+function openRowInSheetView(e){
+  // future improvement: קישור ישיר לשורה. כרגע נחזור לדף הגיליון (משתמש ב-data מתאימה)
+  // placeholder - פשוט סוגר את המודאל (אין מודאל כרגע)
+  // noop
+}
+
+/* ----------------- הצגת דף הבית (כפתורי גיליונות) ----------------- */
+function buildHome(){
+  const cats = document.getElementById("homeCats");
+  cats.innerHTML = "";
+  const names = Object.keys(sheetsData || {});
+  if(!names.length){
+    cats.innerHTML = `<div class="card muted">אין גיליונות להצגה</div>`;
+    return;
+  }
+  names.forEach(name=>{
+    const div = document.createElement("div");
+    div.className = "cat";
+    const first = name ? name.charAt(0) : '';
+    div.innerHTML = `<div class="icon">${escapeHTML(first)}</div><div class="txt">${escapeHTML(name)}</div>`;
+    div.onclick = ()=> showSheet(name);
+    cats.appendChild(div);
+  });
+}
+
+/* ----------------- הצגת גיליון ככרטיסים ----------------- */
+function showSheet(name){
+  document.getElementById("homePage").classList.add("hidden");
+  document.getElementById("sheetPage").classList.remove("hidden");
+  document.getElementById("sheetTitle").textContent = name;
+  const container = document.getElementById("sheetContent");
+  container.innerHTML = "";
+
+  const raw = sheetsData[name];
+  let rows = [];
+  let headers = [];
+
+  if(isArrayOfArrays(raw)){
+    headers = raw[0].map(h=>normalizeKey(h));
+    rows = raw.slice(1).map(r=>{
+      const obj = {};
+      headers.forEach((h,i)=> obj[h||`col${i+1}`] = r[i]);
+      return obj;
+    });
+  } else if(Array.isArray(raw) && raw.length && typeof raw[0] === "object"){
+    headers = Object.keys(raw[0]).map(h=>normalizeKey(h));
+    rows = raw;
+  } else {
+    container.innerHTML = `<div class="card muted">אין נתונים להצגה בגיליון זה</div>`;
+    return;
+  }
+
+  // בניית רשת כרטיסים
+  const gridWrap = document.createElement("div");
+  gridWrap.className = "cards-grid";
+  // לכל שורה - בניית כרטיס
+  rows.forEach(row=>{
+    const cardHtml = buildCardFromRow(headers, row);
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = cardHtml;
+    gridWrap.appendChild(wrapper.firstElementChild);
+  });
+
+  container.appendChild(gridWrap);
+  // גלילה לראש
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ----------------- חזרה לדף הבית ----------------- */
+document.getElementById("backHome").addEventListener("click", ()=>{
+  document.getElementById("sheetPage").classList.add("hidden");
+  document.getElementById("homePage").classList.remove("hidden");
+});
+
+/* ----------------- חיפוש גלובלי ----------------- */
+document.getElementById("globalSearch").addEventListener("input", (e)=>{
+  const q = String(e.target.value || "").trim().toLowerCase();
+  const resDiv = document.getElementById("searchResults");
+  if(!q){
+    resDiv.classList.add("hidden");
+    return;
+  }
+  const results = [];
+  Object.keys(sheetsData || {}).forEach(sheetName=>{
+    const rows = sheetsData[sheetName];
+    if(!rows) return;
+    if(isArrayOfArrays(rows)){
+      const headers = rows[0].map(h=>normalizeKey(h));
+      rows.slice(1).forEach((r, idx)=>{
+        const txt = r.map(c=>String(c||"")).join(" ").toLowerCase();
+        if(txt.includes(q)) {
+          // build object mapping
+          const obj = {};
+          headers.forEach((h,i)=> obj[h||`col${i+1}`] = r[i]);
+          results.push({sheetName, rowIndex: idx+1, row: obj});
+        }
+      });
+    } else if(Array.isArray(rows)){
+      rows.forEach((obj, idx)=>{
+        const txt = Object.values(obj).map(v=>String(v||"")).join(" ").toLowerCase();
+        if(txt.includes(q)) results.push({sheetName, rowIndex: idx, row: obj});
+      });
+    }
+  });
+
+  // show results
+  if(!results.length){
+    resDiv.innerHTML = "<div class='muted'>לא נמצאו תוצאות</div>";
+    resDiv.classList.remove("hidden");
+    return;
+  }
+  let html = `<div style="font-weight:700; margin-bottom:8px">נמצאו ${results.length} תוצאות:</div>`;
+  results.forEach(r=>{
+    html += `<div style="padding:8px 0; border-bottom:1px solid #eee">`;
+    html += `<div style="font-weight:700; color:var(--blue)">${escapeHTML(r.sheetName)}</div>`;
+    // show some fields
+    const entries = Object.entries(r.row).slice(0,6);
+    entries.forEach(([k,v])=> html += `<div><strong>${escapeHTML(k)}:</strong> ${formatCellVal(v)}</div>`);
+    html += `<div style="margin-top:6px"><button class="back-btn" onclick='openSheetFromSearch(${JSON.stringify(r.sheetName)}, ${r.rowIndex})'>צפה בגיליון</button></div>`;
+    html += `</div>`;
+  });
+  resDiv.innerHTML = html;
+  resDiv.classList.remove("hidden");
+});
+
+document.getElementById("clearSearch").addEventListener("click", ()=>{
+  document.getElementById("globalSearch").value = "";
+  document.getElementById("searchResults").classList.add("hidden");
+});
+
+/* ----------------- פתיחה מהחיפוש (עובר לדף גיליון) ----------------- */
+function openSheetFromSearch(sheetName, rowIdx){
+  showSheet(sheetName);
+  // אפשרות להדגיש שורה בעתיד
+}
+
+/* ----------------- טעינת נתונים מהשרת ----------------- */
+async function loadSheets(){
+  try{
+    const res = await fetch(API_URL);
+    // אם יש שגיאה/response לא JSON, ייזרק
+    const data = await res.json();
+    sheetsData = data || {};
+    // hide loader, show home
+    document.getElementById("loadingMessage").classList.add("hidden");
+    document.getElementById("homePage").classList.remove("hidden");
+    buildHome();
+  }catch(err){
+    console.error("Error loading sheets:", err);
+    document.getElementById("loadingMessage").innerText = "⚠️ שגיאה בטעינת הנתונים. אנא בדוק את החיבור או רענן את העמוד.";
+  }
+}
+
+/* התחלה */
+loadSheets();
+</script>
+</body>
+</html>
