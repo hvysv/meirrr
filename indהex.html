@@ -5,107 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>מרכז ההדרכות</title>
 <style>
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f5f7fa;
-  margin: 0;
-  padding: 0;
-}
-header {
-  background: linear-gradient(90deg, #003366, #0059b3);
-  color: white;
-  text-align: center;
-  padding: 15px 0;
-  position: relative;
-}
-header img {
-  height: 60px;
-  animation: fadeIn 1.5s ease-in-out;
-}
-header h1 {
-  margin: 10px 0 0;
-  font-size: 1.8em;
-}
-@keyframes fadeIn {
-  from {opacity: 0;}
-  to {opacity: 1;}
-}
-#loader {
-  text-align: center;
-  padding: 60px;
-  font-size: 1.2em;
-  color: #003366;
-}
-#categories {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin: 20px;
-}
-.category-btn {
-  background: #ffffff;
-  border: 2px solid #003366;
-  border-radius: 25px;
-  padding: 10px 20px;
-  cursor: pointer;
-  font-size: 1.1em;
-  transition: all 0.3s;
-}
-.category-btn:hover {
-  background: #003366;
-  color: white;
-}
-#search-box {
-  width: 90%;
-  max-width: 400px;
-  display: block;
-  margin: 15px auto;
-  padding: 10px;
-  border-radius: 20px;
-  border: 1px solid #ccc;
-  text-align: center;
-  font-size: 1em;
-}
-#content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.card {
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  width: 90%;
-  max-width: 700px;
-  padding: 15px;
-  margin: 10px 0;
-  transition: transform 0.2s;
-}
-.card:hover {
-  transform: scale(1.02);
-}
-.card img {
-  max-width: 100%;
-  border-radius: 10px;
-  margin-top: 10px;
-}
-.back-btn {
-  display: inline-block;
-  margin: 15px;
-  padding: 10px 15px;
-  border: none;
-  background: #003366;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-}
-footer {
-  text-align: center;
-  font-size: 0.9em;
-  color: #666;
-  margin: 30px 0;
-}
+body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+header { background: linear-gradient(90deg, #003366, #0059b3); color: white; text-align: center; padding: 15px 0; position: relative; }
+header img { height: 60px; animation: fadeIn 1.5s ease-in-out; }
+header h1 { margin: 10px 0 0; font-size: 1.8em; }
+@keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+#loader { text-align: center; padding: 60px; font-size: 1.2em; color: #003366; }
+#categories { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 20px; }
+.category-btn { background: #ffffff; border: 2px solid #003366; border-radius: 25px; padding: 10px 20px; cursor: pointer; font-size: 1.1em; transition: all 0.3s; }
+.category-btn:hover { background: #003366; color: white; }
+#search-box { width: 90%; max-width: 400px; display: block; margin: 15px auto; padding: 10px; border-radius: 20px; border: 1px solid #ccc; text-align: center; font-size: 1em; }
+#content { display: flex; flex-direction: column; align-items: center; }
+.card { background: white; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 90%; max-width: 700px; padding: 15px; margin: 10px 0; transition: transform 0.2s; }
+.card:hover { transform: scale(1.02); }
+.card img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
+.back-btn { display: inline-block; margin: 15px; padding: 10px 15px; border: none; background: #003366; color: white; border-radius: 8px; cursor: pointer; }
+footer { text-align: center; font-size: 0.9em; color: #666; margin: 30px 0; }
 </style>
 </head>
 <body>
@@ -116,11 +31,9 @@ footer {
 </header>
 
 <div id="loader">⏳ טוען נתונים... אנא המתן כמה שניות</div>
-
 <div id="categories" style="display:none;"></div>
 <input id="search-box" type="text" placeholder="חפש בכל ההדרכות..." style="display:none;">
 <div id="content"></div>
-
 <footer>האתר בהרצה | נבנה על ידי מ.ל.</footer>
 
 <script>
@@ -162,20 +75,22 @@ function showCategory(sheet) {
   items.forEach(item => {
     const card = document.createElement('div');
     card.className = 'card';
+    
     for (const key in item) {
       if (!item[key]) continue;
       const val = item[key].toString();
 
-      // זיהוי תמונה
-      if (val.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-        card.innerHTML += `<strong>${key}:</strong><br><img src="${val}" alt="תמונה"><br>`;
+      // עמודת תמונה מיוחדת
+      if (key.toLowerCase() === 'תמונה' || key.toLowerCase() === 'last_image') {
+        const imgSrc = val || 'https://via.placeholder.com/400x200?text=No+Image';
+        card.innerHTML += `<strong>${key}:</strong><br><img src="${imgSrc}" alt="תמונה"><br>`;
       }
-      // זיהוי וידאו YouTube
+      // YouTube
       else if (val.includes("youtube.com") || val.includes("youtu.be")) {
         const id = val.split("v=")[1] || val.split("/").pop();
         card.innerHTML += `<strong>${key}:</strong><br><iframe width="100%" height="300" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe><br>`;
       }
-      // זיהוי לינק
+      // לינק
       else if (val.startsWith("http")) {
         card.innerHTML += `<strong>${key}:</strong> <a href="${val}" target="_blank">פתח קישור</a><br>`;
       }
@@ -201,9 +116,7 @@ document.getElementById('search-box').addEventListener('input', function() {
   Object.keys(allData).forEach(sheet => {
     allData[sheet].forEach(item => {
       const values = Object.values(item).join(" ").toLowerCase();
-      if (values.includes(query)) {
-        results.push({...item, _sheet: sheet});
-      }
+      if (values.includes(query)) results.push({...item, _sheet: sheet});
     });
   });
 
@@ -217,8 +130,10 @@ document.getElementById('search-box').addEventListener('input', function() {
       for (const key in item) {
         if (key === "_sheet") continue;
         const val = item[key].toString();
-        if (val.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-          card.innerHTML += `<strong>${key}:</strong><br><img src="${val}" alt="תמונה"><br>`;
+
+        if (key.toLowerCase() === 'תמונה' || key.toLowerCase() === 'last_image') {
+          const imgSrc = val || 'https://via.placeholder.com/400x200?text=No+Image';
+          card.innerHTML += `<strong>${key}:</strong><br><img src="${imgSrc}" alt="תמונה"><br>`;
         } else if (val.includes("youtube.com") || val.includes("youtu.be")) {
           const id = val.split("v=")[1] || val.split("/").pop();
           card.innerHTML += `<strong>${key}:</strong><br><iframe width="100%" height="300" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe><br>`;
