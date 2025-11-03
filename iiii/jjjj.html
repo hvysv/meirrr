@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מרכז ההדרכות</title>
+<style>
+body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+header { background: linear-gradient(90deg, #003366, #0059b3); color: white; text-align: center; padding: 15px 0; position: relative; }
+header img { height: 60px; animation: fadeIn 1.5s ease-in-out; }
+header h1 { margin: 10px 0 0; font-size: 1.8em; }
+@keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+#loader { text-align: center; padding: 60px; font-size: 1.2em; color: #003366; }
+#categories { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 20px; }
+.category-btn { background: #ffffff; border: 2px solid #003366; border-radius: 25px; padding: 10px 20px; cursor: pointer; font-size: 1.1em; transition: all 0.3s; }
+.category-btn:hover { background: #003366; color: white; }
+#search-box { width: 90%; max-width: 400px; display: block; margin: 15px auto; padding: 10px; border-radius: 20px; border: 1px solid #ccc; text-align: center; font-size: 1em; }
+#content { display: flex; flex-direction: column; align-items: center; }
+.card { background: white; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 90%; max-width: 700px; padding: 15px; margin: 10px 0; transition: transform 0.2s; }
+.card:hover { transform: scale(1.02); }
+.card img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
+.back-btn { display: inline-block; margin: 15px; padding: 10px 15px; border: none; background: #003366; color: white; border-radius: 8px; cursor: pointer; }
+footer { text-align: center; font-size: 0.9em; color: #666; margin: 30px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="https://i.postimg.cc/kDK1cdcC/logo.png" alt="לוגו">
+  <h1>מרכז ההדרכות</h1>
+</header>
+
+<div id="loader">⏳ טוען נתונים... אנא המתן כמה שניות</div>
+<div id="categories" style="display:none;"></div>
+<input id="search-box" type="text" placeholder="חפש בכל ההדרכות..." style="display:none;">
+<div id="content"></div>
+<footer>האתר בהרצה | נבנה על ידי מ.ל.</footer>
+
+<script>
+const apiUrl = "https://script.google.com/macros/s/AKfycbzJua87sSrX6OoCDwpD7_U4IdhuQ1Y65Q48GOnKXWjd7n_aj4qIv9U_7NYy-6CRmEpAaQ/exec";
+let allData = {};
+let currentCategory = null;
+
+async function loadData() {
+  try {
+    const res = await fetch(apiUrl);
+    allData = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    showCategories();
+  } catch (e) {
+    document.getElementById('loader').innerText = "⚠️ שגיאה בטעינת הנתונים";
+    console.error(e);
+  }
+}
+
+function showCategories() {
+  const catDiv = document.getElementById('categories');
+  catDiv.innerHTML = '';
+  Object.keys(allData).forEach(sheet => {
+    const btn = document.createElement('button');
+    btn.className = 'category-btn';
+    btn.innerText = sheet;
+    btn.onclick = () => showCategory(sheet);
+    catDiv.appendChild(btn);
+  });
+  catDiv.style.display = 'flex';
+  document.getElementById('search-box').style.display = 'block';
+  document.getElementById('content').innerHTML = '';
+}
+
+function showCategory(sheet) {
+  currentCategory = sheet;
+  const content = document.getElementById('content');
+  content.innerHTML = `<button class="back-btn" onclick="showCategories()">← חזרה</button>`;
+  const items = allData[sheet];
+
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    
+    for (const key in item) {
+      const val = item[key] ? item[key].toString() : "";
+      if (!val) continue;
+
+      // תמונה
+      if (key.toLowerCase() === 'תמונה' || key.toLowerCase() === 'last_image') {
+        const imgSrc = val || 'https://via.placeholder.com/400x200?text=No+Image';
+        card.innerHTML += `<strong>${key}:</strong><br><img src="${imgSrc}" alt="תמונה"><br>`;
+      } 
+      // YouTube
+      else if (val.includes("youtube.com") || val.includes("youtu.be")) {
+        let ytId = val.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        ytId = ytId ? ytId[1] : null;
+        if (ytId) {
+          card.innerHTML += `<strong>${key}:</strong><br><iframe width="100%" height="300" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe><br>`;
+        }
+      } 
+      // לינק רגיל
+      else if (val.startsWith("http")) {
+        card.innerHTML += `<strong>${key}:</strong> <a href="${val}" target="_blank">פתח קישור</a><br>`;
+      } 
+      // טקסט רגיל
+      else {
+        card.innerHTML += `<strong>${key}:</strong> ${val}<br>`;
+      }
+    }
+    content.appendChild(card);
+  });
+}
+
+document.getElementById('search-box').addEventListener('input', function() {
+  const query = this.value.toLowerCase();
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  if (!query) {
+    if (currentCategory) showCategory(currentCategory);
+    return;
+  }
+
+  let results = [];
+  Object.keys(allData).forEach(sheet => {
+    allData[sheet].forEach(item => {
+      const values = Object.values(item).join(" ").toLowerCase();
+      if (values.includes(query)) results.push({...item, _sheet: sheet});
+    });
+  });
+
+  if (results.length === 0) {
+    content.innerHTML = "<p>לא נמצאו תוצאות</p>";
+  } else {
+    results.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<strong>קטגוריה:</strong> ${item._sheet}<br>`;
+      for (const key in item) {
+        if (key === "_sheet") continue;
+        const val = item[key] ? item[key].toString() : "";
+        if (!val) continue;
+
+        if (key.toLowerCase() === 'תמונה' || key.toLowerCase() === 'last_image') {
+          const imgSrc = val || 'https://via.placeholder.com/400x200?text=No+Image';
+          card.innerHTML += `<strong>${key}:</strong><br><img src="${imgSrc}" alt="תמונה"><br>`;
+        } else if (val.includes("youtube.com") || val.includes("youtu.be")) {
+          let ytId = val.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+          ytId = ytId ? ytId[1] : null;
+          if (ytId) {
+            card.innerHTML += `<strong>${key}:</strong><br><iframe width="100%" height="300" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe><br>`;
+          }
+        } else if (val.startsWith("http")) {
+          card.innerHTML += `<strong>${key}:</strong> <a href="${val}" target="_blank">פתח קישור</a><br>`;
+        } else {
+          card.innerHTML += `<strong>${key}:</strong> ${val}<br>`;
+        }
+      }
+      content.appendChild(card);
+    });
+  }
+});
+
+loadData();
+</script>
+
+</body>
+</html>
